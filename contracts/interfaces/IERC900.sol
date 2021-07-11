@@ -14,24 +14,21 @@ interface IERC900 {
     /**
      * @dev Stake a certain amount of tokens
      * @param _amount Amount of tokens to be staked
-     * @param _data Optional data that can be used to add signalling information in more complex staking applications
      */
-    function stake(uint256 _amount, bytes calldata _data) external;
+    function stake(uint256 _amount) external;
 
     /**
      * @dev Stake a certain amount of tokens to another address
      * @param _user Address to stake tokens to
      * @param _amount Amount of tokens to be staked
-     * @param _data Optional data that can be used to add signalling information in more complex staking applications
      */
-    function stakeFor(address _user, uint256 _amount, bytes calldata _data) external;
+    function stakeFor(address _user, uint256 _amount) external;
 
     /**
      * @dev Unstake a certain amount of tokens
      * @param _amount Amount of tokens to be unstaked
-     * @param _data Optional data that can be used to add signalling information in more complex staking applications
      */
-    function unstake(uint256 _amount, bytes calldata _data) external;
+    function unstake(uint256 _amount) external;
 
     /**
      * @dev Tell the current total amount of tokens staked for an address
@@ -50,7 +47,13 @@ interface IERC900 {
      * @dev Tell the address of the staking token
      * @return Address of the staking token
      */
-    function token() external view returns (address);
+    function stakingToken() external view returns (address);
+
+    /**
+     * @dev Tell the address of the reward token
+     * @return Address of the reward token
+     */
+    function rewardToken() external view returns (address);
 
     /*
      * @dev Tell if the optional history functions are implemented
