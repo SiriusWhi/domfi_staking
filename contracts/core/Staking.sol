@@ -94,8 +94,16 @@ contract Staking is IERC900, Modifiers {
         return balances[_addr].staked;
     }
 
-    function totalRewardsFor(address _addr) external view returns (uint256)  {
-        return balances[_addr].reward;
+    function Info(address _addr) external view returns (uint256 _reward, uint256 _penalty, uint256 _netClaim)  {
+        // share of user out of total staked
+        uint256 s = balances[_addr].staked / _totalStaked;
+
+        // to keep track of rewards and penalty
+        (_reward, _penalty) = _getRewardsAndPenalties();
+
+        // calculation of net DOM rewards for user at any point of time
+        _netClaim = DOM.balanceOf(address(this)) * s * _reward * (1 - _penalty);
+
     }
 
     function supportsHistory() external pure override returns (bool) {
@@ -107,9 +115,6 @@ contract Staking is IERC900, Modifiers {
     function _stakeFor(address _from, address _user, uint256 _amount) internal {
         // do not allow to stake zero amount
         require(_amount > 0, ZERO_AMOUNT);
-
-        // rebalance rewards and penalty according to current ongoing phase
-        _rebalance(_user);
 
         // check this contract has been given enough allowance on behalf of who is transferring
         // so this contract can transfer LP tokens into itself to lock
