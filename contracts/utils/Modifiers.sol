@@ -10,10 +10,11 @@ import {Errors} from "./Errors.sol";
 
 abstract contract Modifiers is Constants,Errors {
 
-    /**
-     * @dev Simple Re-entrancy lock
-     */
     uint256 private unlocked = 1;
+    address internal owner;
+    bool internal stakingAllowed;
+
+    // simple switch to prevent re-entrancy
     modifier nonReentrant() {
         require(unlocked == 1, REENTRANCY_LOCKED);
         unlocked = 0;
@@ -21,24 +22,27 @@ abstract contract Modifiers is Constants,Errors {
         unlocked = 1;
     }
 
-    /**
-     * @dev Only allow owner (i.e contract creator)
-     */
-    address internal owner;
+    // restrict function call to only owner
     modifier onlyOwner() {
         require(msg.sender == owner, ONLY_OWNER);
         _;
     }
 
-    /**
-     * @dev Only allow after staking starts
-     */
-    bool internal stakingStarted;
-    modifier afterStakingStarts() {
-        require(stakingStarted, STAKING_NOT_STARTED);
+    // allow calling during deposit period i.e 0 to 7 days 
+    modifier duringStaking() {
+        require(stakingAllowed, STAKING_ENDED_OR_NOT_STARTED);
         _;
     }
 
+    // check on each function call if stake deposit period has ended
+    // if stake deposit period has ended, do not allow further staking
+    modifier checkPeriod() {
+        if(block.timestamp > STAKING_START_TIMESTAMP + STAKING_PERIOD) stakingAllowed = false;
+        _;
+    }
+
+    // This is only intended to be used as a sanity check that an address is actually a contract,
+    // RATHER THAN an address not being a contract.
     function isContract(address _target) internal view returns (bool) {
         if (_target == address(0)) return false;
 
