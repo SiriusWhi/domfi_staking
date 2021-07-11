@@ -16,6 +16,13 @@ contract Staking is IERC900, Modifiers {
 
     // total staked LP tokens
     uint256 private _totalStaked;
+    // total claimed rewards out of total available DOM, updated on every stake and unstake
+    uint256 private _totalClaimedRewards;
+    // total claimable rewards out of total available DOM, updated on every stake and unstake
+    uint256 private _totalClaimableRewards;
+
+    // _totalClaimableRewards + _totalClaimedRewards sholud not exceed TOTAL_DOM
+
 
     // profile keeping track of stake and reward of user
     struct Account {
@@ -72,6 +79,13 @@ contract Staking is IERC900, Modifiers {
         _unstake(msg.sender, _amount);
     }
 
+    function withdrawLeftover() external onlyOwner {
+        require(block.timestamp >= LSP_PERIOD);
+        DOM.transfer(msg.sender, 
+            TOTAL_DOM - (_totalClaimableRewards + _totalClaimedRewards)
+            );
+    }
+
     /* View functions */
 
     function stakingToken() external view override returns (address) {
@@ -102,8 +116,7 @@ contract Staking is IERC900, Modifiers {
         (_reward, _penalty) = _getRewardsAndPenalties();
 
         // calculation of net DOM rewards for user at any point of time
-        _netClaim = DOM.balanceOf(address(this)) * s * _reward * (1 - _penalty);
-
+        _netClaim = TOTAL_DOM * s * _reward * (1 - _penalty);
     }
 
     function supportsHistory() external pure override returns (bool) {
@@ -146,7 +159,14 @@ contract Staking is IERC900, Modifiers {
         LP.transfer(_from, _amount);
 
         // transfer back stake earning of DOM if total DOM earned is > 0
-        if(balances[_from].reward > 0) DOM.transfer(_from, balances[_from].reward);
+        if(balances[_from].reward > 0) {
+            // update _totalClaimedRewards
+            _totalClaimedRewards += balances[_from].reward;
+            _totalClaimableRewards -= balances[_from].reward;
+
+            // transfer DOM rewards
+            DOM.transfer(_from, balances[_from].reward);
+        }
 
         // rebalance rewards and penalty according to current ongoing phase
         _rebalance(_from);
@@ -159,8 +179,15 @@ contract Staking is IERC900, Modifiers {
         // to keep track of rewards and penalty
         (uint256 reward, uint256 penalty) = _getRewardsAndPenalties();
 
+        // balance before re-balancing
+        uint256 oldBal = balances[_user].reward;
         // update dom rewards for the user
-        balances[_user].reward = DOM.balanceOf(address(this)) * s * reward * (1 - penalty);
+        balances[_user].reward = TOTAL_DOM * s * reward * (1 - penalty);
+
+        // update total claimable rewards using difference
+        if(balances[_user].reward > oldBal){
+            _totalClaimableRewards += balances[_user].reward - oldBal;
+        }
     }
 
     function _getRewardsAndPenalties() internal view returns (uint256 _reward, uint256 _penalty) {

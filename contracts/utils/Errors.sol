@@ -9,6 +9,5 @@ abstract contract Errors {
     string internal constant REENTRANCY_LOCKED = "REENTRANCY_LOCKED";
     string internal constant STAKING_ENDED_OR_NOT_STARTED = "STAKING_ENDED_OR_NOT_STARTED";
     string internal constant ZERO_ADDRESS = "ZERO_ADDRESS";
-    string internal constant ZERO_ALLOWANCE = "ZERO_ALLOWANCE";
     string internal constant ZERO_AMOUNT = "ZERO_AMOUNT";
 }
