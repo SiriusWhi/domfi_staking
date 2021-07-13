@@ -16,11 +16,10 @@ contract Staking is IERC900, Modifiers {
 
     // total staked LP tokens
     uint256 private _totalStaked;
-    // total claimed rewards out of total available DOM, updated on every stake and unstake
+    // total claimed rewards out of total available DOM, updated on every unstake
     uint256 private _totalClaimedRewards;
     // total claimable rewards out of total available DOM, updated on every stake and unstake
     uint256 private _totalClaimableRewards;
-
     // _totalClaimableRewards + _totalClaimedRewards sholud not exceed TOTAL_DOM
 
 
@@ -80,6 +79,7 @@ contract Staking is IERC900, Modifiers {
     }
 
     function withdrawLeftover() external onlyOwner {
+        // after LSP_PERIOD is over, allow owner to claim leftover(non claimable by stakers) DOM
         require(block.timestamp >= LSP_PERIOD);
         DOM.transfer(msg.sender, 
             TOTAL_DOM - (_totalClaimableRewards + _totalClaimedRewards)
@@ -109,13 +109,13 @@ contract Staking is IERC900, Modifiers {
     }
 
     function Info(address _addr) external view returns (uint256 _reward, uint256 _penalty, uint256 _netClaim)  {
-        // share of user out of total staked
+        // share of user's stake out of total staked
         uint256 s = balances[_addr].staked / _totalStaked;
 
         // to keep track of rewards and penalty
         (_reward, _penalty) = _getRewardsAndPenalties();
 
-        // calculation of net DOM rewards for user at any point of time
+        // calculation of net DOM rewards for user at any point in time
         _netClaim = TOTAL_DOM * s * _reward * (1 - _penalty);
     }
 
@@ -147,9 +147,17 @@ contract Staking is IERC900, Modifiers {
     function _unstake(address _from, uint256 _amount) internal {
         // do not allow to unstake zero amount
         require(_amount > 0, ZERO_AMOUNT);
+        // revert early if not enough stake (gas saving + readability + better revert message)
+        require(_amount <= balances[_from].staked, NOT_ENOUGH_STAKE);
+
 
         // rebalance rewards and penalty according to current ongoing phase
         _rebalance(_from);
+
+        // maintain ratio for total amount vs amount user is withdrawing
+        uint256 ratio = _amount / balances[_from].staked;
+        // calculate partial rewards
+        uint256 partialRewards = ratio * balances[_from].reward;
 
         // subtract LP tokens from user's staked LP tokens and total staked LP tokens
         balances[_from].staked -= _amount;
@@ -158,14 +166,14 @@ contract Staking is IERC900, Modifiers {
         // transfer back substracted LP tokens
         LP.transfer(_from, _amount);
 
-        // transfer back stake earning of DOM if total DOM earned is > 0
-        if(balances[_from].reward > 0) {
+        // transfer back stake earning of DOM if ratio(DOM earned) is > 0
+        if(ratio > 0) {
             // update _totalClaimedRewards
-            _totalClaimedRewards += balances[_from].reward;
-            _totalClaimableRewards -= balances[_from].reward;
+            _totalClaimedRewards += partialRewards;
+            _totalClaimableRewards -= partialRewards;
 
             // transfer DOM rewards
-            DOM.transfer(_from, balances[_from].reward);
+            DOM.transfer(_from, partialRewards);
         }
 
         // rebalance rewards and penalty according to current ongoing phase
