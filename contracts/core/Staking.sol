@@ -79,8 +79,10 @@ contract Staking is IERC900, Modifiers {
     }
 
     function withdrawLeftover() external onlyOwner {
+        // STAKING_START_TIMESTAMP must be initialized (i.e staking should have started in first place)
+        require(STAKING_START_TIMESTAMP != 0, STAKING_NOT_STARTED);
         // after LSP_PERIOD is over, allow owner to claim leftover(non claimable by stakers) DOM
-        require(block.timestamp >= LSP_PERIOD);
+        require(block.timestamp >= STAKING_START_TIMESTAMP + LSP_PERIOD);
         DOM.transfer(msg.sender, 
             TOTAL_DOM - (_totalClaimableRewards + _totalClaimedRewards)
             );
