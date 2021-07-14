@@ -9,8 +9,13 @@ abstract contract Constants {
     uint256 internal STAKING_START_TIMESTAMP;
 
     uint256 internal constant STAKING_PERIOD = 7 days;
-    uint256 internal constant REWARD_PERIOD = 120 days;
-    uint256 internal constant LSP_PERIOD = 365 days;
+
+    // keep it 120 instead of 120 days because it is direclty needed in days and not seconds
+    uint256 internal constant REWARD_PERIOD = 120;
+    // ultimate timestamp at which lsp will expire
+    uint256 internal LSP_EXPIRATION;
+    // days (not seconds) since initialization left for lsp to expire
+    uint256 internal LSP_PERIOD;
 
     uint256 public TOTAL_DOM;
 
