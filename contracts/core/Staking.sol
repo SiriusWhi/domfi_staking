@@ -50,11 +50,10 @@ contract Staking is IERC900, Modifiers {
         require(totalDOM != 0, ZERO_AMOUNT);
         TOTAL_DOM = totalDOM;
 
-        // explicit timestamp at which LSP will expire
-        LSP_EXPIRATION = lspExpiration;
+        // lspExpiration = ultimate timestamp at which LSP will expire
         // days from now until LSP expires
         // should be greater than REWARD_PERIOD(in days), take care of it manually
-        LSP_PERIOD = (LSP_EXPIRATION - block.timestamp) / 86400 ;
+        LSP_PERIOD = (lspExpiration - block.timestamp) / 86400 ;
     }
 
     /* State changing functions */
