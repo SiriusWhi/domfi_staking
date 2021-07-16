@@ -32,7 +32,7 @@ contract Staking is IERC900, Modifiers {
     // mapping address to thier stake profile
     mapping(address => Account) private balances;
 
-    constructor(address lpToken, address dom, uint256 totalDOM) {
+    constructor(address lpToken, address dom, uint256 totalDOM, uint256 lspExpiration) {
         // set contract creator as owner
         owner = msg.sender;
 
@@ -49,6 +49,11 @@ contract Staking is IERC900, Modifiers {
         // total DOM distributed for rewards should not be zero
         require(totalDOM != 0, ZERO_AMOUNT);
         TOTAL_DOM = totalDOM;
+
+        // lspExpiration = ultimate timestamp at which LSP will expire
+        // days from now until LSP expires
+        // should be greater than REWARD_PERIOD(in days), take care of it manually
+        LSP_PERIOD = (lspExpiration - block.timestamp) / 86400 ;
     }
 
     /* State changing functions */
@@ -79,8 +84,10 @@ contract Staking is IERC900, Modifiers {
     }
 
     function withdrawLeftover() external onlyOwner {
+        // STAKING_START_TIMESTAMP must be initialized (i.e staking should have started in first place)
+        require(STAKING_START_TIMESTAMP != 0, STAKING_NOT_STARTED);
         // after LSP_PERIOD is over, allow owner to claim leftover(non claimable by stakers) DOM
-        require(block.timestamp >= LSP_PERIOD);
+        require(block.timestamp >= STAKING_START_TIMESTAMP + (LSP_PERIOD * 86400));
         DOM.transfer(msg.sender, 
             TOTAL_DOM - (_totalClaimableRewards + _totalClaimedRewards)
             );
@@ -142,6 +149,9 @@ contract Staking is IERC900, Modifiers {
 
         // rebalance rewards and penalty according to current ongoing phase
         _rebalance(_user);
+
+        // emit Staked event
+        emit Staked(_from, _amount, balances[_user].staked);
     }
 
     function _unstake(address _from, uint256 _amount) internal {
@@ -178,6 +188,9 @@ contract Staking is IERC900, Modifiers {
 
         // rebalance rewards and penalty according to current ongoing phase
         _rebalance(_from);
+
+        // emit Unstake event
+        emit Unstaked(_from, _amount, balances[_from].staked);
     }
 
     function _rebalance(address _user) internal {
@@ -199,7 +212,7 @@ contract Staking is IERC900, Modifiers {
     }
 
     function _getRewardsAndPenalties() internal view returns (uint256 _reward, uint256 _penalty) {
-        // days since staking started
+        // converting seconds to days, days since staking started
         uint256 x = (block.timestamp - STAKING_START_TIMESTAMP) / 86400;
 
         if(x < 7)

@@ -8,8 +8,8 @@ pragma solidity 0.8.5;
  */
 
 interface IERC900 {
-    event Staked(address indexed user, uint256 amount, uint256 total, bytes data);
-    event Unstaked(address indexed user, uint256 amount, uint256 total, bytes data);
+    event Staked(address indexed user, uint256 amount, uint256 total);
+    event Unstaked(address indexed user, uint256 amount, uint256 total);
 
     /**
      * @dev Stake a certain amount of tokens
