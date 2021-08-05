@@ -1,0 +1,25 @@
+{
+  "name": "domfi_staking",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:SiriusWhi/domfi_staking.git",
+  "author": "hack3r-0m <parikhom123@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy": "hardhat deploy"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-etherscan": "^2.1.4",
+    "@nomiclabs/hardhat-waffle": "^2.0.0",
+    "chai": "^4.2.0",
+    "ethereum-waffle": "^3.0.0",
+    "hardhat": "^2.4.3",
+    "hardhat-deploy": "^0.8.9"
+  },
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "ethers": "^5.4.1"
+  }
+}
