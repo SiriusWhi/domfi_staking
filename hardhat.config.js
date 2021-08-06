@@ -12,13 +12,13 @@ require('dotenv').config();
 /* Configurations */
 
 module.exports = {
-  defaultNetwork: 'rinkeby',
+  // defaultNetwork: 'rinkeby',
   networks: {
-    rinkeby: {
-      url: process.env.RPC_RINKEYBY,
-      accounts: [process.env.PRIVATE_KEY],
-      saveDeployments: true,
-    },
+    // rinkeby: {
+    //   url: process.env.RPC_RINKEYBY,
+    //   accounts: [process.env.PRIVATE_KEY],
+    //   saveDeployments: true,
+    // },
   },
   solidity: {
     compilers: [
@@ -33,12 +33,12 @@ module.exports = {
     cache: './cache',
     artifacts: './artifacts',
   },
-  namedAccounts: {
-    deployer: {
-      default: process.env.ADDRESS,
-    },
-  },
-  etherscan: {
-    apiKey: process.env.ETHERSCAN_API_KEY,
-  },
+  // namedAccounts: {
+  //   deployer: {
+  //     // default: process.env.ADDRESS,
+  //   },
+  // },
+  // etherscan: {
+  //   // apiKey: process.env.ETHERSCAN_API_KEY,
+  // },
 };
